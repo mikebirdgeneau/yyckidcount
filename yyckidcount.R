@@ -53,6 +53,8 @@ neighbourhood.tweets[,community:=toupper(regmatches(neighbourhood.tweets$text,ma
 neighbourhood.tweets[,count.numbers:=as.numeric(length(gregexpr(pattern = "[0-9]+",text)[[1]])),by=c("id")]
 neighbourhood.tweets[count.numbers==1 ,number:=as.numeric(regmatches(text,regexpr(pattern = "[0-9]+",text))),by=c("id")]
 
+write.csv(neighbourhood.tweets,file="neighbourhood_tweets.csv",row.names=FALSE)
+
 # Summarize by neighbourhood
 ggplot(neighbourhood.tweets,aes(x=community,y=number))+geom_boxplot()
 plot.data<-neighbourhood.tweets[,list(kidcount=median(number,na.rm=TRUE)),by=c("community")]
