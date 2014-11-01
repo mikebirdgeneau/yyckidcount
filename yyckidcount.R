@@ -58,7 +58,7 @@ plot.shp<-data.table(fortify(communities,region = "NAME"))
 plot.df<-data.table(communities@data)
 plot.df[,id:=NAME,]
 
-p<-ggplot() +geom_map(data=plot.df, aes(map_id=id, fill=kidcount), map=plot.shp) + geom_path(data=plot.shp, aes(x=long, y=lat, group=group), colour="black", size=0.25)+ggtitle("#yyckidcount - Haloween 2014")+theme_minimal()+scale_fill_gradientn(name="Kidcount",colours = rev(brewer.pal(11,"Spectral")))+xlab("")+ylab("")+scale_y_continuous(labels=NULL)+scale_x_continuous(labels=NULL)+coord_fixed()+theme(axis.ticks.x=element_blank(),axis.ticks.y=element_blank(),panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p<-ggplot() +geom_map(data=plot.df, aes(map_id=id, fill=kidcount), map=plot.shp) + geom_path(data=plot.shp, aes(x=long, y=lat, group=group), colour="black", size=0.25)+ggtitle("#yyckidcount - Halloween 2014")+theme_minimal()+scale_fill_gradientn(name="Kidcount",colours = rev(brewer.pal(11,"Spectral")))+xlab("")+ylab("")+scale_y_continuous(labels=NULL)+scale_x_continuous(labels=NULL)+coord_fixed()+theme(axis.ticks.x=element_blank(),axis.ticks.y=element_blank(),panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Save to file
 png(filename = "yyckidcount_map.png",height = 700, width = 600,res = 84)
