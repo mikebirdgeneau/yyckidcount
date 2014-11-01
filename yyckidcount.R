@@ -64,7 +64,7 @@ tweet.table$number<-NA
 tweet.table[,count:=as.numeric(length(gregexpr(pattern = "[0-9]+",text)[[1]])),by=c("id")]
 tweet.table[count==1 ,number:=as.numeric(regmatches(text,regexpr(pattern = "[0-9]+",text))),by=c("id")]
 
-plot.data<-tweet.table[count==1 & is.finite(number),list(kidcount=mean(number,na.rm=TRUE),tweetcount=sum(number*0+1)),by=c("x","y")]
+plot.data<-tweet.table[count==1 & is.finite(number),list(kidcount=median(number,na.rm=TRUE),tweetcount=sum(number*0+1)),by=c("x","y")]
 ggplot(plot.data,aes(x=x,y=y,colour=kidcount))+geom_point()
 
 # Convert to Spatial Data
