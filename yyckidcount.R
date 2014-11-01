@@ -27,7 +27,7 @@ source("secret_keys.R") # includes the four lines above with API keys.
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
 city.extent<-list(xmin=-114.25,xmax=-113.91,ymin=50.89,ymax=51.16)
-grid.points<-expand.grid(x=seq(city.extent$xmin,city.extent$xmax,by=0.020),y=seq(city.extent$ymin,city.extent$ymax,by=0.020))
+grid.points<-expand.grid(x=seq(city.extent$xmin,city.extent$xmax,by=0.025),y=seq(city.extent$ymin,city.extent$ymax,by=0.025))
 
 if(file.exists("tweet.table.Rda")){
   load("tweet.table.Rda")
@@ -40,11 +40,12 @@ setTxtProgressBar(pb,value = 0)
 for(i in 1:nrow(grid.points)){
   setTxtProgressBar(pb,value = i)
   #grid.points[i,]
-  tweets<-searchTwitter("#yyckidcount",n=100,geocode = paste0(formatC(grid.points[i,2],digits=4,format="f"),",",formatC(grid.points[i,1],digits=4,format="f"),",1km"),since = "2014-10-30",lang = NULL)
+  tweets<-searchTwitter("#yyckidcount",n=100,geocode = paste0(formatC(grid.points[i,2],digits=4,format="f"),",",formatC(grid.points[i,1],digits=4,format="f"),",5km"),since = "2014-10-30",lang = NULL)
   if(length(tweets)!=0){
     new.tweets<-rbindlist(lapply(tweets,FUN = function(x){x$toDataFrame()}))
-    new.tweets[,x:=grid.points[i,1]]
-    new.tweets[,y:=grid.points[i,2]]
+    new.tweets[,i:=i,]
+    new.tweets[,x:=ifelse(is.finite(longitude),longitude,grid.points[i,1]),]
+    new.tweets[,y:=ifelse(is.finite(latitude),latitude,grid.points[i,2]),]
     tweet.table<-rbindlist(list(tweet.table,new.tweets))
   }
 }
@@ -74,13 +75,12 @@ proj4string(dt.spatial)<-CRS("+proj=longlat")
 dt.spatial<-spTransform(dt.spatial,CRS(map$tiles[[1]]$projection@projargs))
 plot.data2<-data.frame(x=dt.spatial@coords[,1],y=dt.spatial@coords[,2],kidcount=dt.spatial$kidcount)
 
-range(dt.spatial$x)
 dt.newdata<-expand.grid(x=seq(min(dt.spatial$x),max(dt.spatial$x),by=100),y=seq(min(dt.spatial$y),max(dt.spatial$y),by=100))
 #coordinates(dt.newdata)=~x+y
 #proj4string(dt.newdata)<-CRS(map$tiles[[1]]$projection@projargs)
 gridded(dt.newdata) = ~x+y
 
-dt.result<-idw0(kidcount~1,locations=~x+y,data=plot.data2,newdata=dt.newdata)
+dt.result<-idw(kidcount~1,locations=~x+y,data=plot.data2,newdata=dt.newdata)
 dt.result<-data.table(kidcount=dt.result$var1.pred,x=dt.result@coords[,1],y=dt.result@coords[,2])
 
 autoplot(map)+geom_tile(data=dt.result,aes(x=x,y=y,fill=kidcount),alpha=0.35)+scale_fill_gradientn(name="KidCount",colours = rev(brewer.pal(n = 11,name = "Spectral")))
