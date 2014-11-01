@@ -35,13 +35,18 @@ if(file.exists("tweet.table.Rda")){
   tweet.table<-data.table()
 }
 
+pb<-txtProgressBar(min=1,max=nrow(grid.points),style = 3)
+setTxtProgressBar(pb,value = 0)
 for(i in 1:nrow(grid.points)){
-  grid.points[i,]
-  tweets<-searchTwitter("#yyckidcount",n=100,locale = paste0(grid.points[i,1],",",grid.points[i,2],",0.25km"))
-  new.tweets<-rbindlist(lapply(tweets,FUN = function(x){x$toDataFrame()}))
-  new.tweets[,x:=grid.points[i,1]]
-  new.tweets[,y:=grid.points[i,2]]
-  tweet.table<-rbindlist(list(tweet.table,new.tweets))
+  setTxtProgressBar(pb,value = i)
+  #grid.points[i,]
+  tweets<-searchTwitter("#yyckidcount",n=100,geocode = paste0(formatC(grid.points[i,2],digits=4,format="f"),",",formatC(grid.points[i,1],digits=4,format="f"),",1km"),since = "2014-10-30",lang = NULL)
+  if(length(tweets)!=0){
+    new.tweets<-rbindlist(lapply(tweets,FUN = function(x){x$toDataFrame()}))
+    new.tweets[,x:=grid.points[i,1]]
+    new.tweets[,y:=grid.points[i,2]]
+    tweet.table<-rbindlist(list(tweet.table,new.tweets))
+  }
 }
 save(tweet.table,file="tweet.table.Rda")
 
@@ -53,10 +58,13 @@ if(!exists("map")){
   save(map,file="map.Rda")
 }
 
+tweet.table$number<-NULL
+tweet.table$number<-0
+tweet.table$number<-NA
+tweet.table[,count:=as.numeric(length(gregexpr(pattern = "[0-9]+",text)[[1]])),by=c("id")]
+tweet.table[count==1 ,number:=as.numeric(regmatches(text,regexpr(pattern = "[0-9]+",text))),by=c("id")]
 
-tweet.table[,number:=as.numeric(regmatches(text,regexpr(pattern = "[0-9]+",text)),by=c("id"))]
-
-plot.data<-tweet.table[,list(kidcount=median(number,na.rm=TRUE)),by=c("x","y")]
+plot.data<-tweet.table[count==1 & is.finite(number),list(kidcount=mean(number,na.rm=TRUE),tweetcount=sum(number*0+1)),by=c("x","y")]
 ggplot(plot.data,aes(x=x,y=y,colour=kidcount))+geom_point()
 
 # Convert to Spatial Data
@@ -72,9 +80,9 @@ dt.newdata<-expand.grid(x=seq(min(dt.spatial$x),max(dt.spatial$x),by=100),y=seq(
 #proj4string(dt.newdata)<-CRS(map$tiles[[1]]$projection@projargs)
 gridded(dt.newdata) = ~x+y
 
-dt.result<-idw(kidcount~1,locations=~x+y,data=plot.data2,newdata=dt.newdata)
+dt.result<-idw0(kidcount~1,locations=~x+y,data=plot.data2,newdata=dt.newdata)
 dt.result<-data.table(kidcount=dt.result$var1.pred,x=dt.result@coords[,1],y=dt.result@coords[,2])
 
-autoplot(map)+geom_tile(data=dt.result,aes(x=x,y=y,fill=kidcount),alpha=0.2)+scale_fill_gradientn(name="KidCount",colours = rev(brewer.pal(n = 11,name = "Spectral")))
+autoplot(map)+geom_tile(data=dt.result,aes(x=x,y=y,fill=kidcount),alpha=0.35)+scale_fill_gradientn(name="KidCount",colours = rev(brewer.pal(n = 11,name = "Spectral")))
 
 
