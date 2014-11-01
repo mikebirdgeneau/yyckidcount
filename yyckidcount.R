@@ -1,8 +1,6 @@
 library(RCurl)
 library(data.table)
-require("googleVis")
 require(ggplot2)
-require("OpenStreetMap")
 require("sp")
 require("rgdal")
 library(RColorBrewer)
@@ -24,6 +22,8 @@ setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 # Fetch tweets from Twitter with #yyckidcount hashtag
 tweets<-searchTwitter("#yyckidcount",n=5000,since = "2014-10-30",until = "2014-11-01",lang = NULL)
 all.tweets<-rbindlist(lapply(tweets,FUN = function(x){x$toDataFrame()}))
+
+save(all.tweets,file="all.tweets.Rda")
 
 # Load community names & shapefiles
 communities<-readOGR("shp/CALGIS_ADM_COMMUNITY_DISTRICT/CALGIS_ADM_COMMUNITY_DISTRICT.shp","CALGIS_ADM_COMMUNITY_DISTRICT",verbose = TRUE)
@@ -66,4 +66,9 @@ print(p)
 dev.off()
 
 print(p)
+
+setkeyv(plot.data,c("kidcount"))
+plot.data[,Community:=]
+p2<-ggplot(plot.data[kidcount>80,])+geom_bar(aes(x=community,y=kidcount,fill=kidcount),stat="identity")
+p2
 
