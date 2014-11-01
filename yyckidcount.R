@@ -6,15 +6,16 @@ require("rgdal")
 library(RColorBrewer)
 library("gstat")
 
-refreshData<-TRUE
+refreshData<-TRUE # Set to TRUE to update data, otherwise set to FALSE to use saved data.
+
+# Check if we should update the data
 if(refreshData | !file.exists("all.tweets.Rda")){
   
   # Set SSL certs globally
   options(RCurlOptions = list(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl")))
-  
   library(twitteR)
   
-  #Authentication for the Twitter API
+  #Authentication for the Twitter API, copy these four lines into secret_keys.R & populate with your API key & access tokens:
   #api_key <- ""
   #api_secret <- ""
   #access_token <- ""
