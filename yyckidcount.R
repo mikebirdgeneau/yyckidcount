@@ -6,24 +6,30 @@ require("rgdal")
 library(RColorBrewer)
 library("gstat")
 
-# Set SSL certs globally
-options(RCurlOptions = list(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl")))
+refreshData<-TRUE
+if(refreshData | !file.exists("all.tweets.Rda")){
+  
+  # Set SSL certs globally
+  options(RCurlOptions = list(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl")))
+  
+  library(twitteR)
+  
+  #Authentication for the Twitter API
+  #api_key <- ""
+  #api_secret <- ""
+  #access_token <- ""
+  #access_token_secret <- ""
+  source("secret_keys.R") # includes the four lines above with API keys.
+  setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+  
+  # Fetch tweets from Twitter with #yyckidcount hashtag
+  tweets<-searchTwitter("#yyckidcount",n=5000,since = "2014-10-30",lang = NULL)
+  all.tweets<-rbindlist(lapply(tweets,FUN = function(x){x$toDataFrame()}))
+  
+  save(all.tweets,file="all.tweets.Rda")
+}
 
-library(twitteR)
-
-#Authentication for the Twitter API
-#api_key <- ""
-#api_secret <- ""
-#access_token <- ""
-#access_token_secret <- ""
-source("secret_keys.R") # includes the four lines above with API keys.
-setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
-
-# Fetch tweets from Twitter with #yyckidcount hashtag
-tweets<-searchTwitter("#yyckidcount",n=5000,since = "2014-10-30",until = "2014-11-01",lang = NULL)
-all.tweets<-rbindlist(lapply(tweets,FUN = function(x){x$toDataFrame()}))
-
-save(all.tweets,file="all.tweets.Rda")
+load("all.tweets.Rda")
 
 # Load community names & shapefiles
 communities<-readOGR("shp/CALGIS_ADM_COMMUNITY_DISTRICT/CALGIS_ADM_COMMUNITY_DISTRICT.shp","CALGIS_ADM_COMMUNITY_DISTRICT",verbose = TRUE)
@@ -66,9 +72,4 @@ print(p)
 dev.off()
 
 print(p)
-
-setkeyv(plot.data,c("kidcount"))
-plot.data[,Community:=]
-p2<-ggplot(plot.data[kidcount>80,])+geom_bar(aes(x=community,y=kidcount,fill=kidcount),stat="identity")
-p2
 
