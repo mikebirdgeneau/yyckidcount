@@ -1,4 +1,4 @@
-#yyckidcount - Haloween 2014
+#yyckidcount - Halloween 2014
 ===========
 
 There was some great twitter activity last night reporting number of trick-or-treaters using the hashtag #yyckidcount. 
@@ -7,6 +7,6 @@ I took the data from Twitter's API, and using the R language, pulled this data t
 
 From there, I took the median value for all tweets within each community.
 
-It's far from perfect, but it looks like this:
+It's far from perfect, but here's the result:
 
 ![Screenshot](screenshot.png)
